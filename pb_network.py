@@ -2,18 +2,11 @@
 """
 Created on Sat Jun 24 22:33:49 2017
 
-@author: Administrator
+@author: laizhenzhou@126.com
 """
 
 from numpy import *
-import operator
 
-def createDataSet():
-    inputDataSet = array([[0,0,1],[1,1,1],[1,0,1],[0,1,1]]).T
-    ouputDataSet = array([[0,1,1,0]])
-    return inputDataSet,ouputDataSet
-
-    
 def sigmoid(x):
     return 1/(1+math.exp(-x));
 
@@ -44,15 +37,25 @@ def runBpNetwork(inputData,w12,w23,theta2,theta3):
 
     return layer2Ouput,layer3Ouput
 
+
+#Function: trainBpNetwork
+
+#input:
 #inputDataSet: the input  data set, which is arrayed as [x1;x2;x3;...;xN]
 #ouputDataSet: the output data set, whith is arrayed as [y1;y2;y3;...;yN]
+#intermediateLayerNum: the number of neural in itermediate layer
+#maxIterNum : max iteration number that is allowed
+#minLossRatio: min ratio of training error  E((y-y_est)^2)/E(y^2)
+#LeanRatio: the speed for the weight and threshold parameter learn from err
+
+#return:
 #w12    : the weight parameter between layer1 (input layer) and layer2 (intermediate layer)
 #w23    : the weight parameter between layer2 (intermediate layer) and layer3 (putput layer)
 #theta2 : the threshold parameter of layer2(intermediate layer)
 #theta3 : the threshold parameter of layw3(output layer)
-#maxIterNum : max iteration number that is allowed
-#minLossRatio: min ratio of training error
-#LeanRatio: the speed for the weight and threshold parameter learn from err
+#iterIdx: the number of iteration in training
+#lossRatio ：the ratio of training error 
+
 def trainBpNetwork(inputDataSet,ouputDataSet,intermediateLayerNum,maxIterNum,minLossRatio,LeanRatio):
     inputDataSetSize  = inputDataSet.shape[1];
     ouputDataSetSize  = ouputDataSet.shape[1];
@@ -66,12 +69,6 @@ def trainBpNetwork(inputDataSet,ouputDataSet,intermediateLayerNum,maxIterNum,min
     w23    = random.normal(size=(intermediateLayerNum,ouputDataDim));
     theta2 = random.normal(size=intermediateLayerNum);
     theta3 = random.normal(size=ouputDataDim);
-
-#    print('\ninit parameter\n')
-#    print w12
-#    print w23
-#    print theta2
-#    print theta3
 
     iterIdx = 0;
 
@@ -124,56 +121,4 @@ def trainBpNetwork(inputDataSet,ouputDataSet,intermediateLayerNum,maxIterNum,min
         if iterIdx > maxIterNum:
             break;
 
-
-    
-
     return w12,w23,theta2,theta3,iterIdx,lossRatio
-
-#-----------生成测试数据集----------------
-inputDataSet,ouputDataSet = createDataSet()
-print('\n输入测试数据集:')
-print inputDataSet
-
-print('\n输出测试数据集:')
-print ouputDataSet
-
-#-----------设置神经网络------------------
-#隐层神经元个数
-intermediateLayerNum = 4;
-#最多迭代次数
-maxIterNum           = 2000;
-#最小的迭代误差
-minLossRatio         = 0.001;
-#学习速率系数 （0,1]
-LeanRatio            = 0.1;
-
-#-----------训练神经网络-------------------
-w12,w23,theta2,theta3,iterIdx,lossRatio = trainBpNetwork(inputDataSet,ouputDataSet,intermediateLayerNum,maxIterNum,minLossRatio,LeanRatio);
-
-# 给出最终的测试输入对应的预测输出
-finalOutput = zeros(ouputDataSet.shape);
-for n in range(finalOutput.shape[1]):
-    inputData = inputDataSet[:,n];
-    ouputData = ouputDataSet[:,n];
-    layer2Ouput,layer3Ouput = runBpNetwork(inputData,w12,w23,theta2,theta3);
-    finalOutput[:,n] = layer3Ouput;
-print('\n最终的测试集的预测输出')
-print finalOutput
-    
-print('\n最终12层之间的权重系数矩阵:')
-print w12
-print('\n最终23层之间的权重系数矩阵:')
-print w23
-print('\n最终第2层的偏置系数:')
-print theta2
-print('\n最终第3层的偏置系数:')
-print theta3
-print('\n一共进行了的迭代次数:')
-print iterIdx
-print('\n拟合误差比率:')
-print lossRatio
-
-#-----------预测新样本---------------------
-layer2Ouput,layer3Ouput = runBpNetwork(array([0,0,0.5]),w12,w23,theta2,theta3);
-print('\n预测新样本[0,0,0.5]的输出:')
-print layer3Ouput
