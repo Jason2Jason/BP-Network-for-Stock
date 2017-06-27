@@ -11,8 +11,12 @@ import tushare as ts
 import matplotlib.pyplot as plt
 import pb_network
 
-  
-def createStockDataSet(trainSetLen, testSetLen, dateOffset):
+#调用中国联通的股票的历史数据。X是前30天的每日涨跌百分比，Y是后一天的涨跌逻辑值。
+#trainSetLen ：训练样本集的长度
+#testSetLen:   测试样本集的长度
+#dateOffset:   测试样本集和训练样本集之间的间隔。 【训练样本时间分布】【dateOffset】【测试样本集时间分布】
+#              如果dateOffset = 0,表示从训练样本集后面开始的第一天开始预测testSetLen天的涨跌情况。
+def createStockDataSet1(trainSetLen, testSetLen, dateOffset):
     df = ts.get_hist_data('600050');
     #dateLen = df.shape[0];
     historyDateLen = 30;
@@ -46,7 +50,7 @@ def createStockDataSet(trainSetLen, testSetLen, dateOffset):
 trainSetLen = 300
 testSetLen  = 54
 dateOffset  = 100
-inputDataSet,ouputDataSet,inputTestDataSet,ouputTestDataSet = createStockDataSet(trainSetLen,testSetLen,dateOffset)
+inputDataSet,ouputDataSet,inputTestDataSet,ouputTestDataSet = createStockDataSet1(trainSetLen,testSetLen,dateOffset)
 print('\n输入训练数据集:')
 print inputDataSet
 
