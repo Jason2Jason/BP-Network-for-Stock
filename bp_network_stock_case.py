@@ -17,7 +17,9 @@ import pb_network
 #dateOffset:   测试样本集和训练样本集之间的间隔。 【训练样本时间分布】【dateOffset】【测试样本集时间分布】
 #              如果dateOffset = 0,表示从训练样本集后面开始的第一天开始预测testSetLen天的涨跌情况。
 def createStockDataSet1(trainSetLen, testSetLen, dateOffset):
-    df = ts.get_hist_data('600050');
+    df = ts.get_hist_data('600030',start='2015-01-01'); #600030股票代码， #20150101其实时间，结束时间默认是今天
+    print('测试样本最新数据时间:')
+    print df.ix[0].name
     #dateLen = df.shape[0];
     historyDateLen = 30;
     inputTrainDataSet = zeros((historyDateLen,trainSetLen));
@@ -25,10 +27,11 @@ def createStockDataSet1(trainSetLen, testSetLen, dateOffset):
 
     inputTestDataSet = zeros((historyDateLen,testSetLen));
     ouputTestDataSet = zeros((1,testSetLen));
+    predictData      = zeros((historyDateLen,1));
     
     k = 0;
     for i in range(1+dateOffset+testSetLen,trainSetLen+dateOffset+testSetLen):
-        inputTrainDataSet[:,k] = df['p_change'][i-1:i+historyDateLen-1];
+        inputTrainDataSet[:,k] = df['p_change'][i+1:i+historyDateLen+1];
         if df['p_change'][i] >= 0:
             ouputTrainDataSet[:,k] = 1;
         else:
@@ -37,31 +40,35 @@ def createStockDataSet1(trainSetLen, testSetLen, dateOffset):
             
     k = 0;
     for i in range(1+dateOffset,testSetLen+dateOffset):
-        inputTestDataSet[:,k] = df['p_change'][i-1:i+historyDateLen-1];
+        inputTestDataSet[:,k] = df['p_change'][i+1:i+historyDateLen+1];
         if df['p_change'][i] >= 0:
             ouputTestDataSet[:,k] = 1;
         else:
             ouputTestDataSet[:,k] = 0;
         k = k+1;
     
-    return inputTrainDataSet,ouputTrainDataSet,inputTestDataSet,ouputTestDataSet
+    predictData = df['p_change'][0:historyDateLen];
+    print df
+    print predictData
+
+    return inputTrainDataSet,ouputTrainDataSet,inputTestDataSet,ouputTestDataSet,predictData
 
 #-----------生成测试数据集----------------
-trainSetLen = 300
-testSetLen  = 54
-dateOffset  = 100
-inputDataSet,ouputDataSet,inputTestDataSet,ouputTestDataSet = createStockDataSet1(trainSetLen,testSetLen,dateOffset)
-print('\n输入训练数据集:')
+trainSetLen = 100
+testSetLen  = 10
+dateOffset  = 0
+inputDataSet,ouputDataSet,inputTestDataSet,ouputTestDataSet,predictData = createStockDataSet1(trainSetLen,testSetLen,dateOffset)
+print('\n训练数据集的输入集合，样本个数（%d):' %trainSetLen)
 print inputDataSet
 
-print('\n输出训练数据集:')
+print('\n训练数据集的输出结合，样本个数（%d):' %trainSetLen)
 print ouputDataSet
 
 #-----------设置神经网络------------------
 #隐层神经元个数
 intermediateLayerNum = 20;
 #最多迭代次数
-maxIterNum           = 200;
+maxIterNum           = 100;
 #最小的迭代误差
 minLossRatio         = 0.0001;
 #学习速率系数 （0,1]
@@ -111,10 +118,10 @@ print finalOutput
 #print theta2
 #print('\n最终第3层的偏置系数:')
 #print theta3
-print('\n一共进行了的迭代次数:')
-print iterIdx
-print('\n拟合误差比率:')
-print lossRatio
+print('\n一共进行了的迭代次数: %d'  %iterIdx)
+
+print('\n拟合误差比率: %f' %lossRatio)
+
 
 plt.figure()  #创建一个新的画布
 
@@ -145,14 +152,17 @@ for n in range(testSetLen):
     if predictTestOutputLogic[0,n] != ouputTestDataSet[0,n]:
         predictErrCnt = predictErrCnt + 1;
   
-print('\n测试数据集（20天）的真实涨跌（0跌，1涨）:')
+print('\n测试数据集（%d天）的真实涨跌（0跌，1涨）:' %testSetLen)
 print ouputTestDataSet
 
-print('\n测试数据集（20天）的预测涨跌（0跌，1涨）:')
+print('\n测试数据集（%d天）的预测涨跌（0跌，1涨）:' %testSetLen)
 print predictTestOutputLogic
     
-print('\n错误预测次数，失误百分比')
-print predictErrCnt,predictErrCnt*100.0/testSetLen
+errRate = predictErrCnt*100.0/testSetLen
+print('\n错误预测次数:%d，预测失误百分比:%.1f' %(predictErrCnt,errRate))
 
-#print('\n最终的测试集的拟合预测输出')
+#------------------预测明天的涨跌-----------------------
+layer2Ouput,layer3Ouput = runBpNetwork(predictData,w12,w23,theta2,theta3);
+print('\n明天的涨跌：%.2f, %d' %(layer3Ouput,(layer3Ouput>=0.5)))
+
 #print predictTestOutput 
